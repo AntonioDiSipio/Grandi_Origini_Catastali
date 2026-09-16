@@ -1,29 +1,36 @@
 # Grandi Origini Catastali Italiane (Cassini-Soldner)
 
-Repository di riferimento per i centri di emanazione delle **Grandi Origini catastali** (proiezione Cassini-Soldner) del Catasto italiano, con coordinate (est, nord, latitudine, longitudine), province coperte e stringhe di definizione **PROJ** pronte per l'uso in software GIS (QGIS, GDAL, PostGIS).
+Repository di documentazione e parametri geodetici per i centri di emanazione delle **Grandi Origini catastali** (proiezione Cassini-Soldner) dell'Agenzia delle Entrate / Catasto italiano.
+
+Contiene coordinate di riferimento (Est/Nord, Lat/Lon WGS84), ripartizione per province, stringhe per definizioni personalizzate **PROJ** e istruzioni operative per l'uso in ambienti GIS (**QGIS**, GDAL, PostGIS).
 
 ---
 
 ## 📌 Indice
-- [Descrizione](#-descrizione)
-- [Tabella Generale delle Origini](#-tabella-generale-delle-origini)
-- [Stringhe di Definizione PROJ](#-stringhe-di-definizione-proj)
-- [Esempio di Utilizzo in QGIS](#-esempio-di-utilizzo-in-qgis)
-- [Note Tecniche](#-note-tecniche)
+1. [Inquadramento Generale](#-inquadramento-generale)
+2. [Tabella Sinottica delle Origini](#-tabella-sinottica-delle-origini)
+3. [Elenco Stringhe PROJ (Una riga per origine)](#-elenco-stringhe-proj)
+4. [Guida all'Uso in QGIS](#-guida-alluso-in-qgis)
+   - [A. Creazione del CRS Cassini-Soldner personalizzato](#a-creazione-del-crs-cassini-soldner-personalizzato)
+   - [B. Importazione e visualizzazione del layer dei centri di emanazione](#b-importazione-e-visualizzazione-del-layer-dei-centri-di-emanazione)
+5. [Note Geodetiche e Tecniche](#-note-geodetiche-e-tecniche)
+6. [Licenza e Utilizzo](#-licenza-e-utilizzo)
 
 ---
 
-## 📖 Descrizione
+## 📖 Inquadramento Generale
 
-Nel sistema catastale italiano le mappe geometriche particellari sono state originariamente inquadrate su sistemi locali a proiezione Cassini-Soldner riferiti a precisi punti trigonometrici noti come **Grandi Origini** (o Centri di Emanazione). Ciascuna Grande Origine definisce un proprio sistema di riferimento piano cartesiano (avente coordinate fittizie o reali) a cui afferiscono i fogli di mappa delle province limitrofe.
+Nel sistema catastale italiano le mappe geometriche particellari storiche sono state costituite su sistemi di coordinate piane a proiezione analitica **Cassini-Soldner**. 
 
-Questo documento raccoglie i parametri analitici per il calcolo e la georeferenziazione, con ellissoide di riferimento geodetico WGS84 per l'integrazione diretta nei moderni ambienti GIS.
+Ciascun sistema locale è incentrato su uno specifico punto trigonometrico fondamentale (spesso un vertice IGM di I o II ordine, torri, campanili o punti ideali) denominato **Grande Origine** o **Centro di Emanazione**. Le mappe catastali delle province collegate ad una specifica origine esprimono le posizioni plano-altimetriche in metri rispetto agli assi cartesiani ortogonali passanti per quel punto:
+- Asse delle ascisse ($X$ o $Est$): perpendicolare al meridiano di emanazione.
+- Asse delle ordinate ($Y$ o $Nord$): coincidente con il meridiano di emanazione.
 
 ---
 
-## 📊 Tabella Generale delle Origini
+## 📊 Tabella Sinottica delle Origini
 
-| N° | Origine / Punto | Nord (m) | Est (m) | Latitudine (°N) | Longitudine (°E) | Province di Competenza |
+| N° | Origine / Punto Trigonometrico | Nord (m) | Est (m) | Latitudine (°N) | Longitudine (°E) | Province di Competenza |
 |:---:|:---|---:|---:|---:|---:|:---|
 | **1** | Vercelli (Punto Ideale) | 5033316.62 | 1437864.36 | 45.45042576 | 8.20503948 | Biella, Novara (parte), Verbano Cusio Ossola, Vercelli |
 | **2** | Pordenone | 5091681.44 | 2338704.15 | 45.95458397 | 12.66047164 | Belluno (gran parte), Udine (parte), Venezia (parte) |
@@ -57,9 +64,9 @@ Questo documento raccoglie i parametri analitici per il calcolo e la georeferenz
 
 ---
 
-## 📐 Stringhe di Definizione PROJ
+## 📐 Elenco Stringhe PROJ
 
-Un rigo per ciascuna origine, pronto per la definizione di CRS personalizzati (Custom CRS):
+Definizioni in linea pronte per il copia-incolla nei software GIS e nelle librerie di trasformazione cartografica:
 
 - **1) Vercelli (Punto Ideale)**: `+proj=cass +lat_0=45.45042576 +lon_0=8.20503948 +x_0=0 +y_0=0 +ellps=WGS84 +units=m +no_defs`
 - **2) Pordenone**: `+proj=cass +lat_0=45.95458397 +lon_0=12.66047164 +x_0=0 +y_0=0 +ellps=WGS84 +units=m +no_defs`
@@ -93,18 +100,54 @@ Un rigo per ciascuna origine, pronto per la definizione di CRS personalizzati (C
 
 ---
 
-## 🛠 Esempio di Utilizzo in QGIS
+## 🗺️ Guida all'Uso in QGIS
 
-1. Aprire QGIS e andare su **Impostazioni** > **Proiezioni personalizzate...** (Settings > Custom Projections).
-2. Cliccare sul pulsante **+** per aggiungere una nuova definizione.
-3. Assegnare un nome (es. `Cassini-Soldner Monte Pietrereie (14)`).
-4. Nel campo **Formato**, selezionare `PROJ String`.
-5. Incollare la stringa corrispondente dall'elenco sopra (es. `+proj=cass +lat_0=41.6510226 +lon_0=14.25965522 +x_0=0 +y_0=0 +ellps=WGS84 +units=m +no_defs`).
-6. Cliccare su **Applica** e **OK**.
+### A. Creazione del CRS Cassini-Soldner personalizzato
+
+Utilizzare questa procedura per inquadrare o georeferenziare mappe catastali raster (.tif, .png) o importare vettoriali (.dxf, shapefile, CXF) con coordinate locali relative al centro di emanazione.
+
+1. Aprire **QGIS**.
+2. Andare sul menu: **Impostazioni** > **Proiezioni personalizzate...** *(Settings > Custom Projections...)*.
+3. Nella finestra di dialogo, cliccare sul pulsante **`+`** (*Aggiungi nuovo CRS*) in alto a destra.
+4. Compilare i campi:
+   - **Nome**: indicare un nome descrittivo (es. `Catasto Cassini - 14 Monte Pietrereie`).
+   - **Formato**: selezionare **PROJ String** (o *PROJ*).
+   - **Parametri**: incollare la stringa corrispondente all'origine desiderata (es. `+proj=cass +lat_0=41.6510226 +lon_0=14.25965522 +x_0=0 +y_0=0 +ellps=WGS84 +units=m +no_defs`).
+5. Cliccare su **Convalida** *(Validate)* per accertarsi che la sintassi sia formalmente valida.
+6. Cliccare su **Applica** e infine su **OK**.
+7. Il nuovo CRS sarà disponibile tra i **Sistemi di riferimento definiti dall'utente** e potrà essere assegnato al progetto o a singoli layer.
 
 ---
 
-## ℹ️ Note Tecniche
+### B. Importazione e visualizzazione del layer dei centri di emanazione
 
-- **Falso Est / Falso Nord**: Nelle stringhe riportate i valori di traslazione all'origine sono impostati a zero (`+x_0=0 +y_0=0`) poiché riflettono l'origine nativa del sistema cartesiano locale dell'emanazione.
-- **Ellissoide**: I parametri usano convenzionalmente `+ellps=WGS84`. Per rilievi e trasformazioni rigorose con il sistema geodetico Bessel 1841 nativo del catasto, considerare i parametri di rototraslazione specifici dell'IGM/Agenzia delle Entrate.
+Utilizzare questa procedura per caricare sulla mappa il file `grandi_origini_catasto.csv` presente in questo repository:
+
+1. Aprire **QGIS**.
+2. Dal menu principale, selezionare: **Layer** > **Aggiungi layer** > **Aggiungi layer testo delimitato...** *(oppure premere `Ctrl + Shift + T`)*.
+3. Nel campo **Nome file**, cliccare sui tre puntini `...` e selezionare `grandi_origini_catasto.csv`.
+4. Impostare i parametri di lettura:
+   - **Formato file**: scegliere **Delimitatori personalizzati** e spuntare unicamente **Punto e virgola** (`;`).
+   - **Opzioni record e campi**: verificare che sia attiva la spunta su *I primi record hanno i nomi dei campi*.
+   - **Definizione della geometria**:
+     - Spuntare **Coordinate punto**.
+     - **Campo X**: selezionare `Longitudine`.
+     - **Campo Y**: selezionare `Latitudine`.
+     - **SR della geometria**: impostare **EPSG:4326 - WGS 84**.
+5. Verificare la formattazione corretta nella tabella di anteprima in basso e cliccare su **Aggiungi** > **Chiudi**.
+6. I 29 centri di emanazione compariranno sulla mappa geografica con tutti i campi attributo (Nord, Est, PROJ, Province).
+
+---
+
+## ℹ️ Note Geodetiche e Tecniche
+
+1. **Origine degli assi cartesiani**:
+   Nelle definizioni PROJ fornite, le traslazioni all'origine sono poste a zero (`+x_0=0 +y_0=0`), rispecchiando la formulazione nativa del Catasto dove le coordinate sono conteggiate direttamente dal punto trigonometrico centrale (positive a Nord/Est, negative a Sud/Ovest).
+2. **Ellissoide di riferimento**:
+   Le stringhe utilizzano convenzionalmente `+ellps=WGS84`. Storicamente il Catasto italiano ha adottato l'ellissoide di **Bessel 1841** (orientato a Genova o ad altre stazioni locali). Per trasformazioni di precisione sub-metrica o centimetrica verso sistemi ETRF2000 / RDN2008, è raccomandato l'uso dei grigliati di correzione IGM (formato `.gsb` / ConveRgo) o l'inclusione dei parametri di rototraslazione a 7 parametri dell'Agenzia delle Entrate.
+
+---
+
+## 📄 Licenza e Utilizzo
+
+I dati e i parametri qui raccolti derivano da documentazione catastale tecnica pubblica. I file e le istruzioni sono distribuiti liberamente per scopi professionali, didattici e di ricerca nei sistemi informativi territoriali (GIS).

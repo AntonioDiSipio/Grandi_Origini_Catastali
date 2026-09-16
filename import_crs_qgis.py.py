@@ -1,7 +1,10 @@
 import sqlite3
+from typing import Iterable
+
 from qgis.core import QgsApplication, QgsCoordinateReferenceSystem
 
-origini = [
+
+CRS_DEFINITIONS = [
     (1, "Vercelli (Punto Ideale)", "+proj=cass +lat_0=45.45042576 +lon_0=8.20503948 +x_0=0 +y_0=0 +ellps=WGS84 +units=m +no_defs"),
     (2, "Pordenone", "+proj=cass +lat_0=45.95458397 +lon_0=12.66047164 +x_0=0 +y_0=0 +ellps=WGS84 +units=m +no_defs"),
     (3, "Monte Bronzone", "+proj=cass +lat_0=45.70905303 +lon_0=9.99074064 +x_0=0 +y_0=0 +ellps=WGS84 +units=m +no_defs"),
@@ -30,43 +33,137 @@ origini = [
     (29, "Cancello (Castello)", "+proj=cass +lat_0=40.84019413 +lon_0=14.43144708 +x_0=0 +y_0=0 +ellps=WGS84 +units=m +no_defs"),
     (30, "Miradois (Osservatorio Capodimonte)", "+proj=cass +lat_0=40.86365124 +lon_0=14.25552353 +x_0=0 +y_0=0 +ellps=WGS84 +units=m +no_defs"),
     (31, "Monte Petrella", "+proj=cass +lat_0=41.32219558 +lon_0=13.6655907 +x_0=0 +y_0=0 +ellps=WGS84 +units=m +no_defs"),
-    (32, "Marigliano", "+proj=cass +lat_0=40.92522593 +lon_0=14.45600831 +x_0=0 +y_0=0 +ellps=WGS84 +units=m +no_defs")
+    (32, "Marigliano", "+proj=cass +lat_0=40.92522593 +lon_0=14.45600831 +x_0=0 +y_0=0 +ellps=WGS84 +units=m +no_defs"),
 ]
 
-db_path = QgsApplication.qgisUserDatabaseFilePath()
-conn = sqlite3.connect(db_path)
-cur = conn.cursor()
+def get_qgis_user_db_path() -> str:
+    app = QgsApplication.instance()
+    if app is None:
+        raise RuntimeError("Questo script deve essere eseguito all'interno di QGIS 4.x.")
+    db_path = QgsApplication.qgisUserDatabaseFilePath()
+    if not db_path:
+        raise RuntimeError("Impossibile determinare il database utente di QGIS.")
+    return db_path
 
-# Ricava l'ID progressivo massimo per i CRS definiti dall'utente (> 100000)
-cur.execute("SELECT COALESCE(MAX(srs_id), 100000) FROM tbl_srs")
-max_id = max(cur.fetchone()[0], 100000)
 
-inseriti = 0
-for num, name, proj_str in origini:
-    desc = f"Catasto Cassini - {num:02d} {name}"
-    
-    # Verifica se già presente per evitare duplicazioni
-    cur.execute("SELECT srs_id FROM tbl_srs WHERE description = ?", (desc,))
-    row = cur.fetchone()
-    if row:
-        print(f"[GIA PRESENTE] {desc} (ID: USER:{row[0]})")
-        continue
+def get_table_columns(conn: sqlite3.Connection, table_name: str) -> dict:
+    columns = {}
+    for row in conn.execute(f"PRAGMA table_info('{table_name}')").fetchall():
+        columns[row[1]] = row[2].upper() if row[2] else ""
+    return columns
 
-    max_id += 1
-    cur.execute("""
-        INSERT INTO tbl_srs (
-            srs_id, description, projection_acronym, ellipsoid_acronym,
-            parameters, srid, auth_name, auth_id, is_geo, deprecated
-        ) VALUES (?, ?, 'cass', 'WGS84', ?, ?, 'USER', ?, 0, 0)
-    """, (max_id, desc, proj_str, max_id, str(max_id)))
-    
-    inseriti += 1
-    print(f"[OK] Inserito: {desc} (ID: USER:{max_id})")
 
-conn.commit()
-conn.close()
+def description_for(num: int, name: str) -> str:
+    return f"Catasto Cassini - {num:02d} {name}"
 
-# Invalida la cache interna del CRS per aggiornare subito QGIS senza errori
-QgsCoordinateReferenceSystem.invalidateCache()
 
-print(f"\nOperazione completata: {inseriti} nuovi CRS registrati in QGIS.")
+def validate_proj4(proj4_string: str):
+    try:
+        crs = QgsCoordinateReferenceSystem.fromProj4(proj4_string)
+        return crs.isValid(), crs
+    except Exception as exc:
+        return False, exc
+
+
+def register_crs_batch(crs_defs: Iterable[tuple[int, str, str]]) -> tuple[int, int]:
+    db_path = get_qgis_user_db_path()
+    conn = sqlite3.connect(db_path)
+    cur = conn.cursor()
+
+    try:
+        cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='tbl_srs'")
+        if cur.fetchone() is None:
+            raise RuntimeError("Tabella 'tbl_srs' non trovata nel database utente di QGIS.")
+
+        cols = get_table_columns(conn, "tbl_srs")
+
+        required = {
+            "srs_id",
+            "description",
+            "projection_acronym",
+            "ellipsoid_acronym",
+            "parameters",
+            "srid",
+            "auth_name",
+            "auth_id",
+            "is_geo",
+            "deprecated",
+            "wkt",
+        }
+
+        missing = sorted(required - set(cols.keys()))
+        if missing:
+            raise RuntimeError(
+                f"Lo schema di 'tbl_srs' è incompatibile. Campi mancanti: {missing}"
+            )
+
+        cur.execute("SELECT COALESCE(MAX(CAST(srs_id AS INTEGER)), 100000) FROM tbl_srs")
+        current_max = int(cur.fetchone()[0] or 100000)
+        next_id = max(current_max, 100000) + 1
+
+        inserted = 0
+        skipped = 0
+
+        for num, name, proj_str in crs_defs:
+            desc = description_for(num, name)
+
+            cur.execute("SELECT srs_id FROM tbl_srs WHERE description = ?", (desc,))
+            if cur.fetchone() is not None:
+                print(f"[GIA PRESENTE] {desc}")
+                skipped += 1
+                continue
+
+            valid, result = validate_proj4(proj_str)
+            if not valid:
+                print(f"[INVALIDO] {desc}: {result}")
+                skipped += 1
+                continue
+
+            srid_value = next_id
+            auth_id_value = next_id
+
+            if "TEXT" in cols.get("srid", ""):
+                srid_value = str(next_id)
+            if "TEXT" in cols.get("auth_id", ""):
+                auth_id_value = str(next_id)
+
+            cur.execute(
+                """
+                INSERT INTO tbl_srs (
+                    srs_id, description, projection_acronym, ellipsoid_acronym,
+                    parameters, srid, auth_name, auth_id, is_geo, deprecated, wkt
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    next_id,
+                    desc,
+                    "cass",
+                    "WGS84",
+                    proj_str,
+                    srid_value,
+                    "USER",
+                    auth_id_value,
+                    0,
+                    0,
+                    None,
+                ),
+            )
+
+            print(f"[OK] Inserito: {desc} (ID: USER:{next_id})")
+            inserted += 1
+            next_id += 1
+
+        conn.commit()
+        return inserted, skipped
+
+    finally:
+        conn.close()
+
+
+try:
+    inserted, skipped = register_crs_batch(CRS_DEFINITIONS)
+    QgsCoordinateReferenceSystem.invalidateCache()
+    print(f"\nOperazione completata: {inserted} nuovi CRS registrati; {skipped} già presenti o non validi.")
+except Exception as exc:
+    print(f"\nErrore durante la registrazione dei CRS: {exc}")
+    raise

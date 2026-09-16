@@ -14,7 +14,7 @@ Contiene coordinate di riferimento (Est/Nord, Lat/Lon WGS84), ripartizione per p
    - [A. Creazione del CRS Cassini-Soldner personalizzato](#a-creazione-del-crs-cassini-soldner-personalizzato)
    - [B. Importazione e visualizzazione del layer dei centri di emanazione](#b-importazione-e-visualizzazione-del-layer-dei-centri-di-emanazione)
 5. [Note Geodetiche e Tecniche](#-note-geodetiche-e-tecniche)
-6. [Licenza e Utilizzo](#-licenza-e-utilizzo)
+6. [Licenza d'Uso e Clausola di Esclusione della Responsabilità](#-licenza-duso-e-clausola-di-esclusione-della-responsabilità-disclaimer)
 
 ---
 
@@ -263,6 +263,15 @@ Utilizzare questa procedura per caricare sulla mappa il file `grandi_origini_cat
 
 ---
 
-## 📄 Licenza e Utilizzo
+## 📄 Licenza d'Uso e Clausola di Esclusione della Responsabilità (Disclaimer)
 
-Dati tecnici derivati da documentazione catastale pubblica. Il repository e le istruzioni sono liberamente utilizzabili per finalità professionali, accademiche e di sviluppo GIS.
+Il presente archivio e i relativi parametri sono distribuiti sotto licenza libera (ispirata alla Licenza MIT).
+
+### Condizioni d'Uso
+È concesso a chiunque il permesso di utilizzare, copiare, modificare, integrare, pubblicare e distribuire questo materiale, sia per finalità personali che professionali, didattiche o commerciali.
+
+### Esclusione di Responsabilità (As Is)
+> **ATTENZIONE / DISCLAIMER:**  
+> I dati, i parametri di calcolo e le stringhe di proiezione sono forniti **«così come sono» ("AS IS")**, a scopo esclusivamente documentale, informativo e di supporto tecnico, senza alcuna garanzia di qualsivoglia genere, esplicita o implicita, ivi incluse — a titolo esemplificativo e non esaustivo — garanzie di commerciabilità, idoneità a uno scopo particolare, accuratezza geodetica o non violazione.
+>
+> In nessun caso l'autore o i contributori del repository potranno essere ritenuti responsabili per qualsivoglia danno, reclamo, perdita o altra responsabilità (diretta, indiretta, incidentale, speciale o consequenziale) derivante dall'uso o dall'impossibilità d'uso dei dati, parametri o istruzioni qui pubblicati, né per errori di inquadramento cartografico, sovrapposizione o confinazione catastale/giuridica.

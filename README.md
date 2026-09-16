@@ -1,30 +1,40 @@
 # Grandi Origini Catastali Italiane (Cassini-Soldner)
 
-Repository di documentazione e parametri geodetici per i centri di emanazione delle **Grandi Origini catastali** (proiezione Cassini-Soldner) dell'Agenzia delle Entrate / Catasto italiano.
+Repository di documentazione, script di automazione e parametri geodetici per i centri di emanazione delle **Grandi Origini catastali** (proiezione Cassini-Soldner) dell'Agenzia delle Entrate / Catasto italiano.
 
-Contiene coordinate di riferimento (Est/Nord, Lat/Lon WGS84), ripartizione per province, stringhe per definizioni personalizzate **PROJ** con pulsante di copia dedicato per ciascuna origine e istruzioni operative per l'uso in ambienti GIS (**QGIS**, GDAL, PostGIS).
+Include le coordinate (Est/Nord, Lat/Lon WGS84), le province coperte, le stringhe **PROJ** con blocco di copia rapida, il file tabellare `grandi_origini_catasto.csv` e lo script Python `import_crs_qgis.py` per registrare automaticamente tutti i 29 CRS in **QGIS** (supporta sia QGIS 3 che QGIS 4).
 
 ---
 
 ## 📌 Indice
 1. [Inquadramento Generale](#-inquadramento-generale)
-2. [Tabella Sinottica delle Origini](#-tabella-sinottica-delle-origini)
-3. [Stringhe PROJ con Copia Rapida](#-stringhe-proj-con-copia-rapida)
-4. [Guida all'Uso in QGIS](#-guida-alluso-in-qgis)
-   - [A. Creazione del CRS Cassini-Soldner personalizzato](#a-creazione-del-crs-cassini-soldner-personalizzato)
-   - [B. Importazione e visualizzazione del layer dei centri di emanazione](#b-importazione-e-visualizzazione-del-layer-dei-centri-di-emanazione)
-5. [Note Geodetiche e Tecniche](#-note-geodetiche-e-tecniche)
-6. [Licenza d'Uso e Clausola di Esclusione della Responsabilità](#-licenza-duso-e-clausola-di-esclusione-della-responsabilità-disclaimer)
+2. [File del Repository](#-file-del-repository)
+3. [Tabella Sinottica delle Origini](#-tabella-sinottica-delle-origini)
+4. [Stringhe PROJ con Copia Rapida](#-stringhe-proj-con-copia-rapida)
+5. [Guida all'Uso in QGIS](#-guida-alluso-in-qgis)
+   - [A. Importazione Automatica dei 29 CRS (Script Python)](#a-importazione-automatica-dei-29-crs-script-python)
+   - [B. Inserimento Manuale di un Singolo CRS](#b-inserimento-manuale-di-un-singolo-crs)
+   - [C. Visualizzazione dei Centri sulla Mappa da CSV](#c-visualizzazione-dei-centri-sulla-mappa-da-csv)
+6. [Note Geodetiche e Tecniche](#-note-geodetiche-e-tecniche)
+7. [Licenza d'Uso e Clausola di Esclusione della Responsabilità](#-licenza-duso-e-clausola-di-esclusione-della-responsabilità-disclaimer)
 
 ---
 
 ## 📖 Inquadramento Generale
 
-Nel sistema catastale italiano le mappe geometriche particellari storiche sono state costituite su sistemi di coordinate piane a proiezione analitica **Cassini-Soldner**. 
+Nel sistema catastale italiano le mappe particellari storiche sono state costituite su sistemi di coordinate piane a proiezione analitica **Cassini-Soldner**. 
 
-Ciascun sistema locale è incentrato su uno specifico punto trigonometrico fondamentale (vertice trigonometrico, torri o punti ideali) denominato **Grande Origine** o **Centro di Emanazione**. Le mappe catastali delle province collegate a una determinata origine esprimono le posizioni in metri rispetto agli assi cartesiani ortogonali passanti per quel punto:
+Ciascun sistema locale è incentrato su uno specifico punto trigonometrico fondamentale (vertice trigonometrico, torri o punti ideali) denominato **Grande Origine** o **Centro di Emanazione**. Le mappe catastali delle province collegate a una determinata origine esprimono le coordinate in metri rispetto agli assi cartesiani ortogonali passanti per quel punto:
 - Asse delle ascisse ($X$ o $Est$): perpendicolare al meridiano di emanazione.
 - Asse delle ordinate ($Y$ o $Nord$): coincidente con il meridiano di emanazione.
+
+---
+
+## 📁 File del Repository
+
+- **`README.md`**: guida completa, parametri geodetici e istruzioni d'uso.
+- **`grandi_origini_catasto.csv`**: tabella con tutti i punti, coordinate ed elenco province per il caricamento diretto come layer vettoriale.
+- **`import_crs_qgis.py`**: script Python per l'inserimento batch di tutti i 29 sistemi di riferimento direttamente nel database locale di QGIS.
 
 ---
 
@@ -217,61 +227,61 @@ Su GitHub ogni blocco di codice seguente attiva automaticamente l'icona nativa d
 
 ## 🗺️ Guida all'Uso in QGIS
 
-### A. Creazione del CRS Cassini-Soldner personalizzato
+### A. Importazione Automatica dei 29 CRS (Script Python)
 
-Utilizzare questa procedura per inquadrare o georeferenziare mappe catastali raster (.tif, .png) o importare file vettoriali (.dxf, shapefile, CXF) con coordinate locali catastali:
+Per caricare in un solo colpo tutti i 29 sistemi catastali nel database utente di QGIS (sia su QGIS 3 che QGIS 4):
 
 1. Aprire **QGIS**.
-2. Andare sul menu: **Impostazioni** > **Proiezioni personalizzate...** *(Settings > Custom Projections...)*.
-3. Nella finestra di dialogo, cliccare sul pulsante verde **`+`** (*Aggiungi nuovo CRS*) in alto a destra.
-4. Compilare i parametri:
-   - **Nome**: indicare un nome riconoscibile (es. `Catasto Cassini - 14 Monte Pietrereie`).
-   - **Formato**: selezionare dal menu a tendina **PROJ String** (o *PROJ*).
-   - **Parametri**: copiare con il pulsante dedicato la stringa dell'origine desiderata e incollarla nel campo.
-5. Cliccare sul pulsante **Convalida** *(Validate)* per verificare che la sintassi sia valida.
-6. Cliccare su **Applica** e infine su **OK**.
-7. Il nuovo CRS sarà selezionabile sotto **Sistemi di riferimento definiti dall'utente** e potrà essere assegnato al progetto o al singolo layer catastale.
+2. Premere `Ctrl + Alt + P` (oppure menu **Plugin** > **Console Python**).
+3. Aprire l'editor della console (icona foglio con matita) e aprire il file `import_crs_qgis.py`, oppure incollare direttamente il suo contenuto nella riga di comando della console.
+4. Premere il tasto **Esegui script** (triangolo verde).
+5. Tutti i 29 sistemi compariranno istantaneamente nel selettore CRS di QGIS sotto la voce **Sistemi di riferimento definiti dall'utente** con prefisso `USER:1000xx` (es. `Catasto Cassini - 14 Monte Pietrereie`).
 
 ---
 
-### B. Importazione e visualizzazione del layer dei centri di emanazione
+### B. Inserimento Manuale di un Singolo CRS
 
-Utilizzare questa procedura per caricare sulla mappa il file `grandi_origini_catasto.csv` presente nel repository:
+Se si desidera registrare solo una specifica origine:
 
-1. Aprire **QGIS**.
-2. Dal menu principale, selezionare: **Layer** > **Aggiungi layer** > **Aggiungi layer testo delimitato...** *(oppure premere `Ctrl + Shift + T`)*.
-3. Nel campo **Nome file**, cliccare su **Sfoglia (...)** e selezionare `grandi_origini_catasto.csv`.
-4. Configurare le opzioni:
-   - **Formato file**: scegliere **Delimitatori personalizzati** e spuntare esclusivamente **Punto e virgola** (`;`).
-   - **Opzioni record e campi**: assicurarsi che sia attiva la spunta su *I primi record hanno i nomi dei campi*.
-   - **Definizione della geometria**:
-     - Selezionare **Coordinate punto**.
-     - **Campo X**: selezionare `Longitudine`.
-     - **Campo Y**: selezionare `Latitudine`.
-     - **SR della geometria**: impostare **EPSG:4326 - WGS 84**.
-5. Verificare l'anteprima tabellare e cliccare su **Aggiungi** > **Chiudi**.
-6. I 29 centri di emanazione compariranno sulla mappa geografica con tutti gli attributi associati.
+1. In QGIS andare su **Impostazioni** > **Proiezioni personalizzate...**.
+2. Cliccare sul pulsante verde **`+`** in alto a destra.
+3. Assegnare un nome (es. `Catasto Cassini - 14 Monte Pietrereie`).
+4. Nel campo formato selezionare **PROJ String**.
+5. Incollare la stringa corrispondente copiata dalla sezione precedente.
+6. Cliccare su **Convalida** > **Applica** > **OK**.
+
+---
+
+### C. Visualizzazione dei Centri sulla Mappa da CSV
+
+Per visualizzare geograficamente le origini come vettori puntuali con le relative province di competenza:
+
+1. In QGIS andare su **Layer** > **Aggiungi layer** > **Aggiungi layer testo delimitato...** (`Ctrl + Shift + T`).
+2. Selezionare il file `grandi_origini_catasto.csv`.
+3. Impostare:
+   - **Formato file**: *Delimitatori personalizzati* con spunta solo su **Punto e virgola** (`;`).
+   - **Definizione della geometria**: *Coordinate punto*, **Campo X** = `Longitudine`, **Campo Y** = `Latitudine`.
+   - **SR della geometria**: **EPSG:4326 - WGS 84**.
+4. Cliccare su **Aggiungi** > **Chiudi**.
 
 ---
 
 ## ℹ️ Note Geodetiche e Tecniche
 
-1. **Origine degli assi cartesiani**:
-   Nelle definizioni PROJ fornite, le traslazioni all'origine sono poste a zero (`+x_0=0 +y_0=0`), rispecchiando la convenzione nativa catastale in cui le coordinate sono conteggiate direttamente a partire dal punto trigonometrico di emanazione.
-2. **Ellissoide di riferimento**:
-   I parametri usano convenzionalmente l'ellissoide `+ellps=WGS84` per consentire la sovrapposizione immediata su basi cartografiche moderne (OpenStreetMap, ortofoto regionali). Per rilievi millimetrici e trasformazioni storiche con Bessel 1841 nativo, si raccomanda l'uso dei grigliati di correzione IGM (`.gsb` / ConveRgo).
+1. **Origine cartesiana**: Nelle definizioni PROJ le traslazioni all'origine sono poste a zero (`+x_0=0 +y_0=0`), coerentemente con la cartografia originale catastale in cui le coordinate sono conteggiate direttamente a partire dal punto trigonometrico di emanazione.
+2. **Ellissoide**: Viene adottato `+ellps=WGS84` per garantire la compatibilità e la sovrapposizione immediata con cartografie moderne, ortofoto regionali e tile web (OpenStreetMap). Per inquadramenti rigorosi con Bessel 1841 nativo, si raccomanda l'uso dei grigliati di correzione IGM (`.gsb` / ConveRgo).
 
 ---
 
 ## 📄 Licenza d'Uso e Clausola di Esclusione della Responsabilità (Disclaimer)
 
-Il presente archivio e i relativi parametri sono distribuiti sotto licenza libera (ispirata alla Licenza MIT).
+Il presente archivio, i file accessori e gli script sono distribuiti sotto licenza libera (ispirata alla Licenza MIT).
 
 ### Condizioni d'Uso
 È concesso a chiunque il permesso di utilizzare, copiare, modificare, integrare, pubblicare e distribuire questo materiale, sia per finalità personali che professionali, didattiche o commerciali.
 
 ### Esclusione di Responsabilità (As Is)
 > **ATTENZIONE / DISCLAIMER:**  
-> I dati, i parametri di calcolo e le stringhe di proiezione sono forniti **«così come sono» ("AS IS")**, a scopo esclusivamente documentale, informativo e di supporto tecnico, senza alcuna garanzia di qualsivoglia genere, esplicita o implicita, ivi incluse — a titolo esemplificativo e non esaustivo — garanzie di commerciabilità, idoneità a uno scopo particolare, accuratezza geodetica o non violazione.
+> I dati, i parametri di calcolo, gli script Python e le stringhe di proiezione sono forniti **«così come sono» ("AS IS")**, a scopo esclusivamente documentale, informativo e di supporto tecnico, senza alcuna garanzia di qualsivoglia genere, esplicita o implicita, ivi incluse — a titolo esemplificativo e non esaustivo — garanzie di commerciabilità, idoneità a uno scopo particolare, accuratezza geodetica o non violazione.
 >
 > In nessun caso l'autore o i contributori del repository potranno essere ritenuti responsabili per qualsivoglia danno, reclamo, perdita o altra responsabilità (diretta, indiretta, incidentale, speciale o consequenziale) derivante dall'uso o dall'impossibilità d'uso dei dati, parametri o istruzioni qui pubblicati, né per errori di inquadramento cartografico, sovrapposizione o confinazione catastale/giuridica.

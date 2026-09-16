@@ -41,7 +41,7 @@ Ciascun sistema locale è incentrato su uno specifico punto trigonometrico fonda
 ## 📊 Tabella Sinottica delle Origini
 
 | N° | Origine | Nord (m) | Est (m) | Lat (°N) | Lon (°E) | Province |
-|:---:|:---|---:|---:|---:|---:|:---|
+|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 | **1** | Vercelli (Punto Ideale) | 5033316.62 | 1437864.36 | 45.45042576 | 8.20503948 | Biella, Novara (parte), Verbano Cusio Ossola, Vercelli |
 | **2** | Pordenone | 5091681.44 | 2338704.15 | 45.95458397 | 12.66047164 | Belluno (gran parte), Udine (parte), Venezia (parte) |
 | **3** | Monte Bronzone | 5062219.67 | 1577145.63 | 45.70905303 | 9.99074064 | Sondrio, Bergamo, Brescia, Cremona |
